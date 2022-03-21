@@ -23,7 +23,7 @@ class RBTree_1(Scene):
         node = VGroup(circle, node_data)
         self.play(Create(dummy_circle), run_time=2)
         self.play(Transform(dummy_circle, node), run_time=2)
-        
+
 class RBTree_1_2(Scene):
     def construct(self):
         numberplane = NumberPlane()
@@ -53,17 +53,60 @@ class RBTree_1_2(Scene):
         node_2 = VGroup(circle_2, node_2_data).shift(RIGHT * 3 * math.cos(math.pi * 1/4) + DOWN * 3 * math.sin(math.pi * 1/4))
         self.play(Transform(dummy_circle2, node_2), run_time=0.5)
 
+def traversal(node):
+    if node is None:
+        return
+
+    traversal(node.left)
+    print("{} {} {} {} {}".format(
+        node.parent.data if node.parent else -1,
+        node.data,
+        node.black_num,
+        node.left.data if node.left else -1,
+        node.right.data if node.right else -1,
+        ))
+    traversal(node.right)
+
 class RBTreeNode:
-    def __init__(self, *, is_root=False) -> None:
+    def __init__(self, rbtree_demo, rbtree_animation, *, dummy_circle = None, data = -1, is_root = False) -> None:
+        self.rbtree_demo = rbtree_demo
+        self.rbtree_animation = rbtree_animation
         self.left = None
         self.right = None
         self.parent = None
         self.is_root = is_root
-        self.data = -1
+        self.data = data
         if is_root:
             self.black_num = 1
+            self.color = "GREY"
         else:
             self.black_num = 0
+            self.color = "RED"
+
+        if dummy_circle is None:
+            self.circle = Circle(radius=0.6, color=self.color, fill_opacity=0.5)
+            self.node_data = MathTex(str(self.data), font_size=60)
+            self.node = VGroup(self.circle, self.node_data)
+            self.rbtree_demo.play(FadeIn(self.node), run_time=1)
+        else:
+            self.circle = Circle(radius=0.6, color=self.color, fill_opacity=0.5)
+            self.node_data = MathTex(str(self.data), font_size=60)
+            self.node = VGroup(self.circle, self.node_data)
+            self.rbtree_demo.play(Transform(dummy_circle, self.node), run_time=1)
+
+    def set_data(self, data, dummy_circle = None):
+        self.data = data
+
+        if dummy_circle is None:
+            self.node_data = MathTex(str(self.data), font_size=60)
+            pre_node = self.node
+            self.node = VGroup(self.circle, self.node_data)
+            self.rbtree_demo.play(FadeIn(self.node), FadeOut(pre_node), run_time=1)
+        else:
+            self.node_data = MathTex(str(self.data), font_size=60)
+            pre_node = self.node
+            self.node = VGroup(self.circle, self.node_data)
+            self.rbtree_demo.play(Transform(dummy_circle, self.node), FadeOut(pre_node), run_time=1)
 
     def _get_sibling_node(self):
         pass
@@ -74,27 +117,38 @@ class RBTreeNode:
     def _get_near_nephew_node(self):
         pass
 
+class DummyCircle:
+    def __init__(self, rbtree_demo, rbtree_animation):
+        self.rbtree_demo = rbtree_demo
+        self.rbtree_animation = rbtree_animation
+        self.circle = Circle(radius=0.7, color="GREEN", fill_opacity=0)
+        self.rbtree_demo.play(Create(dummy_circle), run_time=1)
 
 class RBTreeAnimation:
-    def __init__(self) -> None:
-        self.root = RBTreeNode(is_root=True)
+    def __init__(self, rbtree_demo) -> None:
+        self.rbtree_demo = rbtree_demo
+        self.root = RBTreeNode(rbtree_demo, self, is_root=True)
+        self.dummy_circle = None
 
     def insert(self, insert_data, now_node = None):
         if now_node is None:
             now_node = self.root
 
         if now_node.data == -1:
-            now_node.data = insert_data
+            dummy_circle = DummyCircle(self.rbtree_demo, self)
+            now_node.set_data(insert_data, dummy_circle)
             self._solve_red_collision(now_node)
 
         elif now_node.data > insert_data:
-            now_node.left = RBTreeNode()
-            now_node.left.parent = now_node
+            if now_node.left is None:
+                now_node.left = RBTreeNode(self.rbtree_demo, self)
+                now_node.left.parent = now_node
             self.insert(insert_data, now_node.left)
 
         else:
-            now_node.right = RBTreeNode()
-            now_node.right.parent = now_node
+            if now_node.right is None:
+                now_node.right = RBTreeNode(self.rbtree_demo, self)
+                now_node.right.parent = now_node
             self.insert(insert_data, now_node.right)
 
     def delete(self):
@@ -115,7 +169,7 @@ class RBTreeAnimation:
     def _solve_red_collision(self, now_node = None):
         if now_node is None:
             now_node = self.root
-        if now_node.data == -1:
+        if now_node.is_root:
             now_node.black_num = 1
             return
 
@@ -135,7 +189,7 @@ class RBTreeAnimation:
                 self._rotation(parent_node, grandparent_node)
                 parent_node.black_num += 1
                 grandparent_node.black_num = 0
-        
+
         elif now_node == parent_node.left and parent_node == grandparent_node.right:
             if grandparent_node.left and not grandparent_node.left.black_num: # R/R\B/R
                 parent_node.black_num += 1
@@ -179,9 +233,61 @@ class RBTreeAnimation:
             up.parent = down.parent
             if up.parent is None:
                 pass
-            elif up.parent.left == down
+            elif up.parent.left == down:
+                up.parent.left = up
+            else:
+                up.parent.right = up
+            down.parent = up
+            down.left = up.right
+            if up.right is not None:
+                up.right.parent = down
+            up.right = down
+            up.is_root = down.is_root
+
+            if up.is_root:
+                self.root = up
+
+            down.is_root = 0
+
         elif up == down.right:
-    
+            up.parent = down.parent
+            if up.parent is None:
+                pass
+            elif up.parent.left == down:
+                up.parent.left = up
+            else:
+                up.parent.right = up
+            down.parent = up
+            down.right = up.left
+            if up.left is not None:
+                up.left.parent = down
+            up.left = down
+            up.is_root = down.is_root
+
+            if up.is_root:
+                self.root = up
+
+            down.is_root = 0
+
 class RBTreeDemo(Scene):
     def construct(self):
-        pass
+        numberplane = NumberPlane()
+        self.add(numberplane)
+
+        rbtree_animation = RBTreeAnimation(self)
+        rbtree_animation.insert(1)
+        # rbtree_animation.insert(5)
+        # rbtree_animation.insert(2)
+        # rbtree_animation.insert(8)
+        # rbtree_animation.insert(9)
+        # rbtree_animation.insert(7)
+        # rbtree_animation.insert(6)
+        # rbtree_animation.insert(3)
+        # rbtree_animation.insert(4)
+        # rbtree_animation.insert(10)
+
+        traversal(rbtree_animation.root)
+
+
+
+
