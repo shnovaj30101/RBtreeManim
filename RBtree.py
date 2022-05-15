@@ -1,13 +1,12 @@
-from multiprocessing.pool import RUN
-from shutil import move
 from manim import *
 import math
 
-NODE_CIRCLE_RADIUS = 0.3
-DUMMY_CIRCLE_RADIUS = 0.35
-HORIZONTAL_NODE_SPACING = 1.5
-RUN_TIME_UNIT = 0.1 
-INIT_ARROW_LENGTH = HORIZONTAL_NODE_SPACING/2*(2**0.5) - 2*NODE_CIRCLE_RADIUS
+NODE_CIRCLE_RADIUS = 0.3 / 1.5
+DUMMY_CIRCLE_RADIUS = 0.35 / 1.5
+HORIZONTAL_NODE_SPACING = 1 / 1.5
+LAYER_HEIGHT = 0.75 / 1.5
+RUN_TIME_UNIT = 0.1 / 2
+INIT_ARROW_LENGTH = ((HORIZONTAL_NODE_SPACING/2)**2 + LAYER_HEIGHT **2)**0.5 - 2*NODE_CIRCLE_RADIUS
 LINE_WIDTH = 3
 TIP_LENGTH = 0.2
 
@@ -89,8 +88,8 @@ class RBTreeNode:
                     'right' if parent.circle.get_center()[0] > self.rbtree_animation.root.circle.get_center()[0] else 'left'
 
                 no_border_cross = True
-                left_node_list = []
-                right_node_list = []
+                left_node_set = set()
+                right_node_set = set()
                 no_border_cross_subtree_node = self
                 no_border_cross_subtree_node_type = None
 
@@ -112,9 +111,9 @@ class RBTreeNode:
 
                     if not no_border_cross:
                         if trace_parent_node.child_type == 'right':
-                            left_node_list.append(trace_parent_node.parent)
+                            left_node_set.add(trace_parent_node.parent)
                         elif trace_parent_node.child_type == 'left':
-                            right_node_list.append(trace_parent_node.parent)
+                            right_node_set.add(trace_parent_node.parent)
 
                     trace_parent_node = trace_parent_node.parent
 
@@ -137,9 +136,10 @@ class RBTreeNode:
                                 pass # impossible
                             elif self.child_type == 'left':
                                 self.rbtree_demo.play(
-                                    *map(lambda node: node.tree_vgroup_displayed_mobject_animate_shift(RIGHT * move_distance, mode = 'right'), right_node_list),
-                                    *map(lambda node: node.left_child_arrow.shift_start(RIGHT * move_distance), right_node_list),
-                                    *map(lambda node: node.parent.right_child_arrow.shift_end(RIGHT * move_distance), filter(lambda node: node.child_type == 'right', right_node_list)),
+                                    *map(lambda node: node.tree_vgroup_displayed_mobject_animate_shift(RIGHT * move_distance, mode = 'right'), right_node_set),
+                                    *map(lambda node: node.left_child_arrow.shift_start(RIGHT * move_distance), filter(lambda node: node.left not in right_node_set, right_node_set)),
+                                    *map(lambda node: node.left_child_arrow.arrow.animate.shift(RIGHT * move_distance), filter(lambda node: node.left in right_node_set, right_node_set)),
+                                    *map(lambda node: node.parent.right_child_arrow.shift_end(RIGHT * move_distance), filter(lambda node: node.child_type == 'right', right_node_set)),
                                     no_border_cross_subtree_node.tree_vgroup_displayed_mobject_animate_shift(RIGHT * move_distance),
                                     no_border_cross_subtree_node.parent.right_child_arrow.shift_end(RIGHT * move_distance),
                                     FadeIn(arrow.arrow),
@@ -149,23 +149,32 @@ class RBTreeNode:
                                 # because of some manim bugs: arrow.shift not change arrow.start, arrow.end
                                 arrow.arrow.start += RIGHT * move_distance
                                 arrow.arrow.end += RIGHT * move_distance
+                                for n in filter(lambda node: node.left in right_node_set, right_node_set):
+                                    n.left_child_arrow.arrow.start += RIGHT * move_distance
+                                    n.left_child_arrow.arrow.end += RIGHT * move_distance
                                 ###################################################
                                 self.rbtree_animation.displayed_object_set.add(arrow)
                                 no_border_cross_subtree_node.tree_vgroup_undisplayed_mobject_shift(RIGHT * move_distance)
-                                for node in right_node_list:
+                                for node in right_node_set:
                                     node.tree_vgroup_undisplayed_mobject_shift(RIGHT * move_distance, mode = 'right')
 
                         elif no_border_cross_subtree_node_type == 'left':
                             if self.child_type == 'right':
                                 self.rbtree_demo.play(
-                                    *map(lambda node: node.tree_vgroup_displayed_mobject_animate_shift(RIGHT * move_distance, mode = 'right'), right_node_list),
-                                    *map(lambda node: node.left_child_arrow.shift_start(RIGHT * move_distance), right_node_list),
-                                    *map(lambda node: node.parent.right_child_arrow.shift_end(RIGHT * move_distance), filter(lambda node: node.child_type == 'right', right_node_list)),
+                                    *map(lambda node: node.tree_vgroup_displayed_mobject_animate_shift(RIGHT * move_distance, mode = 'right'), right_node_set),
+                                    *map(lambda node: node.left_child_arrow.shift_start(RIGHT * move_distance), filter(lambda node: node.left not in right_node_set, right_node_set)),
+                                    *map(lambda node: node.left_child_arrow.arrow.animate.shift(RIGHT * move_distance), filter(lambda node: node.left in right_node_set, right_node_set)),
+                                    *map(lambda node: node.parent.right_child_arrow.shift_end(RIGHT * move_distance), filter(lambda node: node.child_type == 'right', right_node_set)),
                                     FadeIn(arrow.arrow),
                                     dummy_circle.move(self.parent._get_right_child_pos()),
                                     run_time=RUN_TIME_UNIT)
+                                # because of some manim bugs: arrow.shift not change arrow.start, arrow.end
+                                for n in filter(lambda node: node.left in right_node_set, right_node_set):
+                                    n.left_child_arrow.arrow.start += RIGHT * move_distance
+                                    n.left_child_arrow.arrow.end += RIGHT * move_distance
+                                ###################################################
                                 self.rbtree_animation.displayed_object_set.add(arrow)
-                                for node in right_node_list:
+                                for node in right_node_set:
                                     node.tree_vgroup_undisplayed_mobject_shift(RIGHT * move_distance, mode = 'right')
 
                             elif self.child_type == 'left':
@@ -176,35 +185,45 @@ class RBTreeNode:
                                 pass # impossible
                             elif self.child_type == 'left':
                                 self.rbtree_demo.play(
-                                    *map(lambda node: node.tree_vgroup_displayed_mobject_animate_shift(LEFT * move_distance, mode = 'left'), left_node_list),
-                                    *map(lambda node: node.right_child_arrow.shift_start(LEFT * move_distance), left_node_list),
-                                    *map(lambda node: node.parent.left_child_arrow.shift_end(LEFT * move_distance), filter(lambda node: node.child_type == 'left', left_node_list)),
+                                    *map(lambda node: node.tree_vgroup_displayed_mobject_animate_shift(LEFT * move_distance, mode = 'left'), left_node_set),
+                                    *map(lambda node: node.right_child_arrow.shift_start(LEFT * move_distance), filter(lambda node: node.right not in left_node_set, left_node_set)),
+                                    *map(lambda node: node.right_child_arrow.arrow.animate.shift(LEFT * move_distance), filter(lambda node: node.right in left_node_set, left_node_set)),
+                                    *map(lambda node: node.parent.left_child_arrow.shift_end(LEFT * move_distance), filter(lambda node: node.child_type == 'left', left_node_set)),
                                     FadeIn(arrow.arrow),
                                     dummy_circle.move(self.parent._get_left_child_pos()),
                                     run_time=RUN_TIME_UNIT)
+                                # because of some manim bugs: arrow.shift not change arrow.start, arrow.end
+                                for n in filter(lambda node: node.right in left_node_set, left_node_set):
+                                    n.right_child_arrow.arrow.start += LEFT * move_distance
+                                    n.right_child_arrow.arrow.end += LEFT * move_distance
+                                ###################################################
                                 self.rbtree_animation.displayed_object_set.add(arrow)
-                                for node in left_node_list:
+                                for node in left_node_set:
                                     node.tree_vgroup_undisplayed_mobject_shift(LEFT * move_distance, mode = 'left')
 
                         elif no_border_cross_subtree_node_type == 'left':
                             if self.child_type == 'right':
                                 self.rbtree_demo.play(
-                                    *map(lambda node: node.tree_vgroup_displayed_mobject_animate_shift(LEFT * move_distance, mode = 'left'), left_node_list),
-                                    *map(lambda node: node.right_child_arrow.shift_start(LEFT * move_distance), left_node_list),
-                                    *map(lambda node: node.parent.left_child_arrow.shift_end(LEFT * move_distance), filter(lambda node: node.child_type == 'left', left_node_list)),
+                                    *map(lambda node: node.tree_vgroup_displayed_mobject_animate_shift(LEFT * move_distance, mode = 'left'), left_node_set),
+                                    *map(lambda node: node.right_child_arrow.shift_start(LEFT * move_distance), filter(lambda node: node.right not in left_node_set, left_node_set)),
+                                    *map(lambda node: node.right_child_arrow.arrow.animate.shift(LEFT * move_distance), filter(lambda node: node.right in left_node_set, left_node_set)),
+                                    *map(lambda node: node.parent.left_child_arrow.shift_end(LEFT * move_distance), filter(lambda node: node.child_type == 'left', left_node_set)),
                                     no_border_cross_subtree_node.tree_vgroup_displayed_mobject_animate_shift(LEFT * move_distance),
                                     no_border_cross_subtree_node.parent.left_child_arrow.shift_end(LEFT * move_distance),
                                     FadeIn(arrow.arrow),
                                     arrow.arrow.animate.shift(LEFT * move_distance),
                                     dummy_circle.move(self.parent._get_right_child_pos() + LEFT * move_distance),
                                     run_time=RUN_TIME_UNIT)
-                                self.rbtree_animation.displayed_object_set.add(arrow)
                                 # because of some manim bugs: arrow.shift not change arrow.start, arrow.end
                                 arrow.arrow.start += LEFT * move_distance
                                 arrow.arrow.end += LEFT * move_distance
+                                for n in filter(lambda node: node.right in left_node_set, left_node_set):
+                                    n.right_child_arrow.arrow.start += LEFT * move_distance
+                                    n.right_child_arrow.arrow.end += LEFT * move_distance
                                 ###################################################
+                                self.rbtree_animation.displayed_object_set.add(arrow)
                                 no_border_cross_subtree_node.tree_vgroup_undisplayed_mobject_shift(LEFT * move_distance)
-                                for node in left_node_list:
+                                for node in left_node_set:
                                     node.tree_vgroup_undisplayed_mobject_shift(LEFT * move_distance, mode = 'left')
 
                             elif self.child_type == 'left':
@@ -221,16 +240,16 @@ class RBTreeNode:
             self.rbtree_demo,
             self.rbtree_animation,
             from_node = self,
-            x_dir = 1,
-            y_dir = -1,
+            x_dir = HORIZONTAL_NODE_SPACING/2,
+            y_dir = -LAYER_HEIGHT,
         )
 
         self.left_child_arrow = ChildArrow(
             self.rbtree_demo,
             self.rbtree_animation,
             from_node = self,
-            x_dir = -1,
-            y_dir = -1,
+            x_dir = -HORIZONTAL_NODE_SPACING/2,
+            y_dir = -LAYER_HEIGHT,
         )
         self.recursive_add_parent_tree_group(add_items=[self.left_child_arrow, self.right_child_arrow])
 
@@ -651,8 +670,11 @@ class RBTreeDemo(Scene):
         rbtree_animation.insert(7.5)
         rbtree_animation.insert(0.75)
         rbtree_animation.insert(6.5)
-        # rbtree_animation.insert(0.6)
-        # rbtree_animation.insert(0.65)
-        # rbtree_animation.insert(5.3)
-        # rbtree_animation.insert(5.8)
+        rbtree_animation.insert(0.6)
+        rbtree_animation.insert(0.65)
+        rbtree_animation.insert(5.3)
+        rbtree_animation.insert(5.8)
+        rbtree_animation.insert(0.3)
+        rbtree_animation.insert(0.8)
+        rbtree_animation.insert(7.8)
         self.wait()
