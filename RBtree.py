@@ -1,11 +1,11 @@
 from manim import *
 import math
 
-NODE_CIRCLE_RADIUS = 0.3 / 1.5
-DUMMY_CIRCLE_RADIUS = 0.35 / 1.5
-HORIZONTAL_NODE_SPACING = 1 / 1.5
-LAYER_HEIGHT = 0.75 / 1.5
-RUN_TIME_UNIT = 0.1 / 2 
+NODE_CIRCLE_RADIUS = 0.4 / 1.5
+DUMMY_CIRCLE_RADIUS = 0.45 / 1.5
+HORIZONTAL_NODE_SPACING = 1.2 / 1.5
+LAYER_HEIGHT = 0.9 / 1.5
+RUN_TIME_UNIT = 0.5 / 2 
 # RUN_TIME_UNIT = 1
 INIT_ARROW_LENGTH = ((HORIZONTAL_NODE_SPACING/2)**2 + LAYER_HEIGHT **2)**0.5 - 2*NODE_CIRCLE_RADIUS
 LINE_WIDTH = 3
@@ -51,11 +51,6 @@ class RBTreeNode:
             self.black_num = 0
             self.color = "RED"
         
-        if self.data != -1 and self.rbtree_animation.data_node_map.get(-1) is not None:
-            print('lala')
-            print(self.rbtree_animation.data_node_map.get(-1)._get_left_child_pos())
-            print(self.rbtree_animation.data_node_map.get(-1)._get_right_child_pos())
-
         if self.parent is None:
             self.circle = Circle(radius=NODE_CIRCLE_RADIUS, color=self.color, fill_opacity=0.5)
             self.node_data = MathTex(str(self.data), font_size=100*NODE_CIRCLE_RADIUS)
@@ -136,11 +131,6 @@ class RBTreeNode:
                         self.rbtree_animation.displayed_object_set.add(arrow)
 
                 else:
-                    if self.data == 5.5:
-                        print(self.parent.data)
-                        print(left_or_right_from_root)
-                        print(no_border_cross_subtree_node_type)
-                        print(self.child_type)
                     if left_or_right_from_root == 'right':
                         if no_border_cross_subtree_node_type == 'right':
                             if self.child_type == 'right':
@@ -368,10 +358,6 @@ class RBTreeNode:
                 x_dir = -HORIZONTAL_NODE_SPACING/2,
                 y_dir = -LAYER_HEIGHT,
             )
-            if self.data == 6:
-                print('gggggggggggggggggg')
-                print(self._get_left_child_pos())
-                print(self._get_right_child_pos())
             self.recursive_add_parent_tree_group(add_items = [self.left_child_arrow])
         else:
             target_node.child_type = "left"
@@ -416,11 +402,6 @@ class RBTreeNode:
 
     def rotation_move(self, up):
         down = self
-        if down.data == 1:
-            print('pppppppppppppp')
-            print(up.parent.data)
-            print(up.parent._get_left_child_pos())
-            print(up.parent._get_right_child_pos())
         move_distance = LAYER_HEIGHT
         if up.child_type == "left":
             if down.child_type == "right":
@@ -433,8 +414,8 @@ class RBTreeNode:
                     run_time=RUN_TIME_UNIT)
                 if not down.left:
                     # because of some manim bugs: change arrow.start, arrow.end not arrow.shift 
-                    down.right_child_arrow.arrow.shift(DOWN * move_distance)
-                    down.right_child_arrow.update_position(DOWN * move_distance)
+                    down.left_child_arrow.arrow.shift(DOWN * move_distance)
+                    down.left_child_arrow.update_position(DOWN * move_distance)
                         
                 down.tree_vgroup_undisplayed_mobject_shift(DOWN * move_distance, mode = 'right')
                 up.tree_vgroup_undisplayed_mobject_shift(UP * move_distance, mode = 'left')
@@ -452,18 +433,8 @@ class RBTreeNode:
                     down.right_child_arrow.arrow.shift(DOWN * move_distance)
                     down.right_child_arrow.update_position(DOWN * move_distance)
                         
-                if down.data == 1:
-                    print('pppppppppppppp')
-                    print(up.parent.data)
-                    print(up.parent._get_left_child_pos())
-                    print(up.parent._get_right_child_pos())
                 down.tree_vgroup_undisplayed_mobject_shift(DOWN * move_distance, mode = 'left')
                 up.tree_vgroup_undisplayed_mobject_shift(UP * move_distance, mode = 'right')
-                if down.data == 1:
-                    print('pppppppppppppp')
-                    print(up.parent.data)
-                    print(up.parent._get_left_child_pos())
-                    print(up.parent._get_right_child_pos())
 
         elif up.child_type == "right":
             if down.child_type == "right":
@@ -500,11 +471,6 @@ class RBTreeNode:
 
         else:
             if down.child_type == "right":
-                if down.data == 6:
-                    print('kkkkkkkkkk')
-                    print(down.data)
-                    print(down._get_left_child_pos())
-                    print(down._get_right_child_pos())
                 down_up_horizontal_distance = (down.circle.get_center() - up.circle.get_center())[0]
                 self.rbtree_demo.play(
                     down.tree_vgroup_displayed_mobject_animate_shift(DOWN * move_distance + RIGHT * down_up_horizontal_distance, mode = 'right'),
@@ -515,18 +481,8 @@ class RBTreeNode:
                     run_time=RUN_TIME_UNIT)
                 if not down.left:
                     # because of some manim bugs: change arrow.start, arrow.end not arrow.shift 
-                    if down.data == 6:
-                        print('kkkkkkkkkk')
-                        print(down.data)
-                        print(down._get_left_child_pos())
-                        print(down._get_right_child_pos())
                     down.left_child_arrow.arrow.shift(DOWN * move_distance + RIGHT * down_up_horizontal_distance)
                     down.left_child_arrow.update_position(DOWN * move_distance + RIGHT * down_up_horizontal_distance)
-                    if down.data == 6:
-                        print('kkkkkkkkkk')
-                        print(down.data)
-                        print(down._get_left_child_pos())
-                        print(down._get_right_child_pos())
                 else:
                     down.left.tree_vgroup_undisplayed_mobject_shift(RIGHT * down_up_horizontal_distance),
                 down.tree_vgroup_undisplayed_mobject_shift(DOWN * move_distance + RIGHT * down_up_horizontal_distance, mode = 'right')
@@ -872,20 +828,8 @@ class RBTreeAnimation:
                 self._solve_red_collision(grandparent_node)
 
             else: # R\R/B\B
-                if now_node.data == 5 and parent_node.data == 1 and grandparent_node.data == 6:
-                    print('@@@@@@@@@@@@@@@@@@@@@@')
-                    print(grandparent_node._get_left_child_pos())
-                    print(grandparent_node._get_right_child_pos())
                 self._rotation(now_node, parent_node)
-                if now_node.data == 5 and parent_node.data == 1 and grandparent_node.data == 6:
-                    print('@@@@@@@@@@@@@@@@@@@@@@')
-                    print(grandparent_node._get_left_child_pos())
-                    print(grandparent_node._get_right_child_pos())
                 self._rotation(now_node, grandparent_node)
-                if now_node.data == 5 and parent_node.data == 1 and grandparent_node.data == 6:
-                    print('@@@@@@@@@@@@@@@@@@@@@@')
-                    print(grandparent_node._get_left_child_pos())
-                    print(grandparent_node._get_right_child_pos())
                 now_node.set_black()
                 grandparent_node.set_red()
 
@@ -906,8 +850,10 @@ class RBTreeAnimation:
         if up == down.left:
             pre_up_right = up.right
             down.set_left_child(pre_up_right)
-            up.set_parent(down_parent)
+            up.set_parent(None)
             up.set_right_child(down)
+            up.set_parent(down_parent)
+            up.recursive_add_parent_tree_group(add_items = list(up.tree_vgroup))
             if down.parent is None:
                 up.child_type = ''
                 pass
@@ -930,8 +876,10 @@ class RBTreeAnimation:
         elif up == down.right:
             pre_up_left = up.left
             down.set_right_child(pre_up_left)
-            up.set_parent(down_parent)
+            up.set_parent(None)
             up.set_left_child(down)
+            up.set_parent(down_parent)
+            up.recursive_add_parent_tree_group(add_items = list(up.tree_vgroup))
             if down.parent is None:
                 up.child_type = ''
                 pass
@@ -955,30 +903,32 @@ class RBTreeAnimation:
 
 class RBTreeDemo(Scene):
     def construct(self):
-        numberplane = NumberPlane()
-        self.add(numberplane)
+        # numberplane = NumberPlane()
+        # self.add(numberplane)
 
         rbtree_animation = RBTreeAnimation(self, start_coor = UP*2)
-        rbtree_animation.insert(6)
-        rbtree_animation.insert(1)
-        rbtree_animation.insert(5)
-        rbtree_animation.insert(2)
-        rbtree_animation.insert(8)
-        rbtree_animation.insert(9)
-        rbtree_animation.insert(7)
-        rbtree_animation.insert(5.5)
-        rbtree_animation.insert(3)
-        rbtree_animation.insert(10)
-        rbtree_animation.insert(8.5)
-        rbtree_animation.insert(0.5)
-        rbtree_animation.insert(7.5)
-        rbtree_animation.insert(0.75)
-        rbtree_animation.insert(6.5)
-        rbtree_animation.insert(0.6)
-        rbtree_animation.insert(0.65)
-        rbtree_animation.insert(5.3)
-        rbtree_animation.insert(5.8)
+        # rbtree_animation.insert(6)
+        # rbtree_animation.insert(1)
+        # rbtree_animation.insert(5)
+        # rbtree_animation.insert(2)
+        # rbtree_animation.insert(8)
+        # rbtree_animation.insert(9)
+        # rbtree_animation.insert(7)
+        # rbtree_animation.insert(5.5)
+        # rbtree_animation.insert(3)
+        # rbtree_animation.insert(10)
+        # rbtree_animation.insert(8.5)
+        # rbtree_animation.insert(0.5)
+        # rbtree_animation.insert(7.5)
+        # rbtree_animation.insert(0.75)
+        # rbtree_animation.insert(6.5)
+        # rbtree_animation.insert(0.6)
+        # rbtree_animation.insert(0.65)
+        # rbtree_animation.insert(5.3)
+        # rbtree_animation.insert(5.8)
         # rbtree_animation.insert(0.3)
         # rbtree_animation.insert(0.8)
         # rbtree_animation.insert(7.8)
+        for i in range(1,23):
+            rbtree_animation.insert(i)
         self.wait()
