@@ -1,13 +1,11 @@
 from manim import *
 import math
 
-NODE_CIRCLE_RADIUS = 0.4 / 1.5
-DUMMY_CIRCLE_RADIUS = 0.45 / 1.5
-HORIZONTAL_NODE_SPACING = 1.2 / 1.5
-LAYER_HEIGHT = 0.9 / 1.5
-RUN_TIME_UNIT = 0.5 / 2 
-# RUN_TIME_UNIT = 1
-INIT_ARROW_LENGTH = ((HORIZONTAL_NODE_SPACING/2)**2 + LAYER_HEIGHT **2)**0.5 - 2*NODE_CIRCLE_RADIUS
+NODE_CIRCLE_RADIUS = 0.3 / 1.5
+DUMMY_CIRCLE_RADIUS = 0.35 / 1.5
+HORIZONTAL_NODE_SPACING = 0.9 / 1.5
+LAYER_HEIGHT = 0.6 / 1.5
+RUN_TIME_UNIT = 0.1 / 2 
 LINE_WIDTH = 3
 TIP_LENGTH = 0.2
 
@@ -929,6 +927,6 @@ class RBTreeDemo(Scene):
         # rbtree_animation.insert(0.3)
         # rbtree_animation.insert(0.8)
         # rbtree_animation.insert(7.8)
-        for i in range(1,23):
+        for i in range(1,5):
             rbtree_animation.insert(i)
         self.wait()
