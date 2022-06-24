@@ -47,6 +47,73 @@ https://docs.manim.community/en/stable/installation.html
 
 ![demo](https://user-images.githubusercontent.com/12492724/175510723-3f9c174e-bcdd-4bbf-b414-8eb9b9d33988.gif)
 
+### 如何操作動畫中的紅黑樹
+
+如果想要改變動畫中紅黑樹的操作方式，請進入 `main.py`：
+
+```
+class RBTreeDemo(Scene):
+    def construct(self):
+        # 這邊去註解可以在背景加入網格線
+        # numberplane = NumberPlane()
+        # self.add(numberplane)
+
+        # start_coor 可以改變跟節點的初始位置
+        # 設定方法為 x * UP + y * RIGHT，x 和 y 可以自由設定，最後跟節點必會位於網格線上的座標 (x,y)
+        rbtree_animation = RBTreeAnimation(self, start_coor = UP*2)
+
+        # 可使用 rbtree_animation.insert() 或是 rbtree_animation.delete()
+        # 來指定要插入什麼資料以及刪除什麼資料
+        rbtree_animation.insert(6)
+        rbtree_animation.insert(1)
+        rbtree_animation.insert(5)
+        rbtree_animation.insert(2)
+        rbtree_animation.insert(8)
+        rbtree_animation.insert(9)
+        rbtree_animation.insert(7)
+        rbtree_animation.insert(5.5)
+        rbtree_animation.insert(3)
+        rbtree_animation.insert(10)
+        rbtree_animation.insert(8.5)
+        rbtree_animation.insert(0.5)
+        rbtree_animation.insert(7.5)
+        rbtree_animation.insert(0.75)
+        rbtree_animation.insert(6.5)
+        rbtree_animation.insert(0.6)
+        rbtree_animation.insert(0.65)
+        rbtree_animation.insert(5.3)
+        rbtree_animation.insert(5.8)
+        rbtree_animation.insert(0.3)
+        rbtree_animation.insert(0.8)
+        rbtree_animation.insert(7.8)
+        self.wait()
+```
+
 ### 參數設定
+
+在檔案 `setting.py` 可以指定每個細項參數設定：
+
+```
+# 指定一個 Node 的半徑
+NODE_CIRCLE_RADIUS = 0.6 / 1.5
+
+# 指定一個 DummyNode (綠框圓圈) 的半徑
+DUMMY_CIRCLE_RADIUS = 0.65 / 1.5
+
+# 指定兩個相鄰 Node 的圓心水平距離
+HORIZONTAL_NODE_SPACING = 1.5 / 1.5
+
+# 指定兩個父子 Node 的圓心垂直距離
+LAYER_HEIGHT = 1.5 / 1.5
+
+# 指定每個單位動畫時長
+RUN_TIME_UNIT = 0.3 / 2 
+
+# 指定箭頭的最大寬度
+LINE_WIDTH = 3
+
+# 指定箭頭前端的對大 size
+TIP_LENGTH = 0.2
+```
 
 
