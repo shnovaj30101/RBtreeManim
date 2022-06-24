@@ -45,7 +45,7 @@ https://docs.manim.community/en/stable/installation.html
 
 ### 動畫 Demo
 
-![demo](https://user-images.githubusercontent.com/12492724/175510723-3f9c174e-bcdd-4bbf-b414-8eb9b9d33988.gif)
+![RBTreeDemo](https://user-images.githubusercontent.com/12492724/175518523-18223b45-d2d0-49c4-8ae8-046cd205bc00.gif)
 
 ### 如何操作動畫中的紅黑樹
 
