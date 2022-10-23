@@ -26,7 +26,7 @@ class DummyCircle:
 
     def move(self, coor):
         return self.circle.animate.move_to(coor)
-        
+
 
 class RBTreeAnimation:
     def __init__(self, rbtree_demo, *, start_coor = ORIGIN) -> None:
@@ -35,14 +35,13 @@ class RBTreeAnimation:
         self.displayed_object_set = set()
         self.data_node_map = dict()
         self.root = RBTreeNode(rbtree_demo, self, is_root=True)
-        self.dummy_circle = None
 
     def insert(self, insert_data):
-        self.dummy_circle = DummyCircle(self.rbtree_demo, self, start_node = self.root)
+        dummy_circle = DummyCircle(self.rbtree_demo, self, start_node = self.root)
         now_node = self.root
 
         if now_node.data == -1:
-            now_node.set_data(insert_data, self.dummy_circle)
+            now_node.set_data(insert_data, dummy_circle)
             return
 
         while True:
@@ -52,7 +51,7 @@ class RBTreeAnimation:
                         self.rbtree_demo,
                         self,
                         data = insert_data,
-                        dummy_circle = self.dummy_circle,
+                        dummy_circle = dummy_circle,
                         parent = now_node,
                         child_type = 'left',
                     )
@@ -60,7 +59,7 @@ class RBTreeAnimation:
                     break
 
                 now_node = now_node.left
-                self.rbtree_demo.play(self.dummy_circle.move(now_node.circle.get_center()), run_time=RUN_TIME_UNIT)
+                self.rbtree_demo.play(dummy_circle.move(now_node.circle.get_center()), run_time=RUN_TIME_UNIT)
 
             else:
                 if now_node.right is None:
@@ -68,7 +67,7 @@ class RBTreeAnimation:
                         self.rbtree_demo,
                         self,
                         data = insert_data,
-                        dummy_circle = self.dummy_circle,
+                        dummy_circle = dummy_circle,
                         parent = now_node,
                         child_type = 'right',
                     )
@@ -76,23 +75,180 @@ class RBTreeAnimation:
                     break
 
                 now_node = now_node.right
-                self.rbtree_demo.play(self.dummy_circle.move(now_node.circle.get_center()), run_time=RUN_TIME_UNIT)
+                self.rbtree_demo.play(dummy_circle.move(now_node.circle.get_center()), run_time=RUN_TIME_UNIT)
 
 
-    def delete(self):
-        pass
+    def delete(self, delete_data):
+        dummy_circle = DummyCircle(self.rbtree_demo, self, start_node = self.root)
+        now_node = self.root
 
-    def _delete_node_handle(self):
-        pass
+        if now_node.data == -1:
+            self.rbtree_demo.play(FadeOut(dummy_circle.circle), run_time=RUN_TIME_UNIT)
+            self.rbtree_demo.remove(dummy_circle.circle)
 
-    def _BBB_delete_node_handle(self):
-        pass
+            return False
 
-    def _BRB_delete_node_handle(self):
-        pass
+        while True:
+            if now_node is None:
+                self.rbtree_demo.play(FadeOut(dummy_circle.circle), run_time=RUN_TIME_UNIT)
+                self.rbtree_demo.remove(dummy_circle.circle)
+                return False
+            elif now_node.data > delete_data:
+                if now_node.left is None:
+                    self.rbtree_demo.play(FadeOut(dummy_circle.circle), run_time=RUN_TIME_UNIT)
+                    self.rbtree_demo.remove(dummy_circle.circle)
+                    return False
+                now_node = now_node.left
+                self.rbtree_demo.play(dummy_circle.move(now_node.circle.get_center()), run_time=RUN_TIME_UNIT)
+            elif now_node.data < delete_data:
+                if now_node.right is None:
+                    self.rbtree_demo.play(FadeOut(dummy_circle.circle), run_time=RUN_TIME_UNIT)
+                    self.rbtree_demo.remove(dummy_circle.circle)
+                    return False
+                now_node = now_node.right
+                self.rbtree_demo.play(dummy_circle.move(now_node.circle.get_center()), run_time=RUN_TIME_UNIT)
+            else:
+                break
 
-    def _BBR_delete_node_handle(self):
-        pass
+        target_node = now_node
+        replace_node = None
+
+        dummy_circle2 = DummyCircle(self.rbtree_demo, self, start_node = now_node)
+        if now_node.left is not None:
+            now_node = now_node.left
+            self.rbtree_demo.play(dummy_circle2.move(now_node.circle.get_center()), run_time=RUN_TIME_UNIT)
+            while now_node.right is not None:
+                now_node = now_node.right
+                self.rbtree_demo.play(dummy_circle2.move(now_node.circle.get_center()), run_time=RUN_TIME_UNIT)
+            replace_node = now_node
+        else:
+            replace_node = now_node
+
+        target_node.data, replace_node.data = replace_node.data, target_node.data
+        self.rbtree_demo.play(Transform(replace_node.node_data, target_node.node_data), Transform(target_node.node_data, replace_node.node_data), FadeOut(dummy_circle.circle), FadeOut(dummy_circle2.circle), run_time=RUN_TIME_UNIT)
+        self.rbtree_demo.remove(dummy_circle.circle)
+        self.rbtree_demo.remove(dummy_circle2.circle)
+
+        if replace_node.black_num == 0:
+            # 1. replace node is red
+            replace_node.destroy()
+            return True
+
+        elif replace_node.left or replace_node.right:
+            # 2. replace node have child
+            replace_node.destroy()
+            return True
+        else:
+            # 2.5. replace is only root node
+            if replace_node == self.root:
+                replace_node.destroy()
+                return True
+
+            # 3. BBB
+            # 4. BRB
+            # 5. BBR
+            self._delete_node_handle(replace_node)
+            replace_node.destroy()
+            return True
+
+
+    def _delete_node_handle(self, node):
+        if node.parent is None:
+            return
+
+        parent = node.parent
+        sibling = self._get_sibling_node(node)
+
+        if sibling.black_num == 1 and parent.black_num == 1:
+            self._BBB_delete_node_handle(node)
+        elif sibling.black_num == 1 and parent.black_num == 0:
+            self._BRB_delete_node_handle(node)
+        elif sibling.black_num == 0 and parent.black_num == 1:
+            self._BBR_delete_node_handle(node)
+
+    def _BBB_delete_node_handle(self, node):
+        parent = node.parent
+        sibling = self._get_sibling_node(node)
+        remote_nephew = self._get_remote_nephew_node(node)
+        near_nephew = self._get_near_nephew_node(node)
+
+        if remote_nephew and remote_nephew.black_num == 0:
+            self._rotation(sibling, parent)
+            remote_nephew.set_black()
+
+        elif near_nephew and near_nephew.black_num == 0:
+            self._rotation(near_nephew, sibling)
+            near_nephew.set_black()
+            sibling.set_red()
+            self._rotation(near_nephew, parent)
+            sibling.set_black()
+
+        else:
+            sibling.set_red()
+            self._delete_node_handle(parent)
+
+    def _BRB_delete_node_handle(self, node):
+        parent = node.parent
+        sibling = self._get_sibling_node(node)
+        remote_nephew = self._get_remote_nephew_node(node)
+        near_nephew = self._get_near_nephew_node(node)
+
+        if remote_nephew and remote_nephew.black_num == 0:
+            self._rotation(sibling, parent)
+            parent.set_black()
+            sibling.set_red()
+            remote_nephew.set_black()
+
+        elif near_nephew and near_nephew.black_num == 0:
+            self._rotation(near_nephew, sibling)
+            near_nephew.set_black()
+            sibling.set_red()
+            self._rotation(near_nephew, parent)
+            parent.set_black()
+            near_nephew.set_red()
+            sibling.set_black()
+
+        else:
+            parent.set_black()
+            sibling.set_red()
+
+    def _BBR_delete_node_handle(self, node):
+        parent = node.parent
+        sibling = self._get_sibling_node(node)
+        self._rotation(sibling, parent)
+        parent.set_red()
+        sibling.set_black()
+        self._BRB_delete_node_handle(node)
+
+    def _get_sibling_node(self, node):
+        if node.parent is None:
+            return None
+
+        if node.parent.left == node:
+            return node.parent.right
+
+        else:
+            return node.parent.left
+
+    def _get_remote_nephew_node(self, node):
+        sibling = self._get_sibling_node(node)
+        if sibling is None:
+            return None
+
+        if sibling.data > node.data:
+            return sibling.right
+        else:
+            return sibling.left
+
+    def _get_near_nephew_node(self, node):
+        sibling = self._get_sibling_node(node)
+        if sibling is None:
+            return None
+
+        if sibling.data > node.data:
+            return sibling.left
+        else:
+            return sibling.right
 
     def _solve_red_collision(self, now_node = None):
         if now_node is None:

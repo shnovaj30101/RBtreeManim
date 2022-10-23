@@ -38,4 +38,5 @@ class RBTreeDemo(Scene):
         rbtree_animation.insert(0.3)
         rbtree_animation.insert(0.8)
         rbtree_animation.insert(7.8)
+        rbtree_animation.insert(4)
         self.wait()

@@ -510,3 +510,48 @@ class RBTreeNode:
         x_pos, y_pos, *_ = self.left_child_arrow.to_node_position
         return RIGHT * x_pos + UP * y_pos
 
+    def destroy(self):
+        # 2.5. replace is only root node
+
+        # 1. replace node is red
+
+        if replace_node.parent is not None and \
+            replace_node.parent.left == replace_node:
+
+        elif replace_node.parent is not None and \
+            replace_node.parent.right == replace_node:
+
+        # 2. replace node have child
+
+        self_arrow = None
+        parent_arrow = None
+        if replace_node.right is not None:
+            # child = replace_node.right
+            self_arrow = 'right'
+        else:
+            # child = replace_node.left
+            self_arrow = 'left'
+
+        if replace_node.parent is not None and replace_node.parent.left == replace_node:
+            # replace_node.parent.left = child
+            parent_arrow = 'left'
+        elif replace_node.parent is not None and replace_node.parent.right == replace_node:
+            # replace_node.parent.right = child
+            parent_arrow = 'right'
+
+
+
+        if node == self.root:
+            node.set_data(-1)
+            del self.data_node_map[node.data]
+            return
+
+        self.rbtree_demo.play(FadeOut(node.circle), FadeOut(parent_arrow.arrow), run_time=RUN_TIME_UNIT)
+
+        node.parent.recursive_add_parent_tree_group(remove_items = [node, parent_arrow])
+        self.displayed_object_set.remove(node)
+        self.displayed_object_set.remove(parent_arrow)
+        del self.data_node_map[node.data]
+        del node
+        del parent_arrow
+
