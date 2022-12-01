@@ -29,7 +29,7 @@ class RBTreeNode:
         else:
             self.black_num = 0
             self.color = "RED"
-        
+
         if self.parent is None:
             self.circle = Circle(radius=NODE_CIRCLE_RADIUS, color=self.color, fill_opacity=0.5)
             self.node_data = MathTex(str(self.data), font_size=100*NODE_CIRCLE_RADIUS)
@@ -213,6 +213,9 @@ class RBTreeNode:
         )
         self.recursive_add_parent_tree_group(add_items=[self.left_child_arrow, self.right_child_arrow])
 
+    def move_to(self, position):
+        self.node.move_to(position)
+
     def tree_vgroup_displayed_mobject_animate_shift(self, direction, mode='all'):
         if mode == 'left':
             if self.left:
@@ -273,6 +276,7 @@ class RBTreeNode:
         undisplayed_mobject_vgroup.shift(direction)
 
     def set_data(self, data, dummy_circle = None):
+        del self.rbtree_animation.data_node_map[self.data]
         self.data = data
 
         if dummy_circle is None:
@@ -281,7 +285,7 @@ class RBTreeNode:
             self.circle = Circle(radius=NODE_CIRCLE_RADIUS, color=self.color, fill_opacity=0.5)
             pre_node = self.node
             self.node = VGroup(self.circle, self.node_data).move_to(now_pos)
-            self.rbtree_demo.play(FadeIn(self.node), FadeOut(pre_node), run_time=RUN_TIME_UNIT)
+            self.rbtree_demo.play(ReplacementTransform(pre_node, self.node), run_time=RUN_TIME_UNIT)
         else:
             now_pos = self.circle.get_center()
             self.node_data = MathTex(str(self.data), font_size=100*NODE_CIRCLE_RADIUS)
@@ -290,6 +294,8 @@ class RBTreeNode:
             self.node = VGroup(self.circle, self.node_data).move_to(now_pos)
             self.rbtree_demo.play(ReplacementTransform(dummy_circle.circle, self.node), FadeOut(pre_node), run_time=RUN_TIME_UNIT)
             self.rbtree_animation.displayed_object_set.add(self)
+
+        self.rbtree_animation.data_node_map[data] = self
 
     def set_black(self):
         self.black_num = 1
@@ -493,15 +499,6 @@ class RBTreeNode:
         if self.parent is not None:
             self.parent.recursive_add_parent_tree_group(add_items = add_items, remove_items = remove_items)
 
-    def _get_sibling_node(self):
-        pass
-
-    def _get_remote_nephew_node(self):
-        pass
-
-    def _get_near_nephew_node(self):
-        pass
-
     def _get_right_child_pos(self):
         x_pos, y_pos, *_ = self.right_child_arrow.to_node_position
         return RIGHT * x_pos + UP * y_pos
@@ -511,47 +508,129 @@ class RBTreeNode:
         return RIGHT * x_pos + UP * y_pos
 
     def destroy(self):
-        # 2.5. replace is only root node
-
         # 1. replace node is red
 
-        if replace_node.parent is not None and \
-            replace_node.parent.left == replace_node:
+        if self.black_num == 0:
+            if self.parent is not None and \
+                self.parent.left == self:
 
-        elif replace_node.parent is not None and \
-            replace_node.parent.right == replace_node:
+                self.parent = self.parent
+
+                self.parent.recursive_add_parent_tree_group(remove_items = [self, self.parent.left_child_arrow])
+                self.parent.left_child_arrow.destroy()
+                self.parent.left_child_arrow = ChildArrow(
+                    self.rbtree_demo,
+                    self.rbtree_animation,
+                    from_node = self.parent,
+                    x_dir = -HORIZONTAL_NODE_SPACING/2,
+                    y_dir = -LAYER_HEIGHT,
+                )
+                self.parent.left = None
+                if self in self.rbtree_animation.displayed_object_set:
+                    self.rbtree_animation.displayed_object_set.remove(self)
+                self.rbtree_demo.remove(self.node)
+                del self.rbtree_animation.data_node_map[self.data]
+
+                self.parent.recursive_add_parent_tree_group(add_items = [self.parent.left_child_arrow])
+
+                return self.parent, None, None, None
+
+            elif self.parent is not None and \
+                self.parent.right == self:
+
+                self.parent.recursive_add_parent_tree_group(remove_items = [self, self.parent.right_child_arrow])
+                self.parent.right_child_arrow.destroy()
+                self.parent.right_child_arrow = ChildArrow(
+                    self.rbtree_demo,
+                    self.rbtree_animation,
+                    from_node = self.parent,
+                    x_dir = HORIZONTAL_NODE_SPACING/2,
+                    y_dir = -LAYER_HEIGHT,
+                )
+                self.parent.right = None
+                if self in self.rbtree_animation.displayed_object_set:
+                    self.rbtree_animation.displayed_object_set.remove(self)
+                self.rbtree_demo.remove(self.node)
+                del self.rbtree_animation.data_node_map[self.data]
+
+                self.parent.recursive_add_parent_tree_group(add_items = [self.parent.right_child_arrow])
+
+                return self.parent, None, None, None
 
         # 2. replace node have child
 
-        self_arrow = None
-        parent_arrow = None
-        if replace_node.right is not None:
+        elif self.right is not None:
             # child = replace_node.right
-            self_arrow = 'right'
-        else:
+
+            child_type = 'right'
+
+            if self.parent is None:
+                self.right_child_arrow.destroy()
+                if self in self.rbtree_animation.displayed_object_set:
+                    self.rbtree_animation.displayed_object_set.remove(self)
+                self.rbtree_demo.remove(self.node)
+                self.root = self.right
+                self.right.parent = None
+
+                return None, self.right, None, child_type
+
+            elif self.parent.right == self:
+                self.right_child_arrow.destroy()
+                if self in self.rbtree_animation.displayed_object_set:
+                    self.rbtree_animation.displayed_object_set.remove(self)
+                self.rbtree_demo.remove(self.node)
+                self.parent.set_right_child(self.right)
+                self.parent.right = self.right
+                self.right.parent = self.parent
+
+                return self.parent, self.right, 'right', child_type
+
+            elif self.parent.left == self:
+                self.right_child_arrow.destroy()
+                if self in self.rbtree_animation.displayed_object_set:
+                    self.rbtree_animation.displayed_object_set.remove(self)
+                self.rbtree_demo.remove(self.node)
+                self.parent.set_left_child(self.right)
+                self.parent.left = self.right
+                self.right.parent = self.parent
+
+                return self.parent, self.right, 'left', child_type
+
+
+        elif self.left is not None:
             # child = replace_node.left
-            self_arrow = 'left'
 
-        if replace_node.parent is not None and replace_node.parent.left == replace_node:
-            # replace_node.parent.left = child
-            parent_arrow = 'left'
-        elif replace_node.parent is not None and replace_node.parent.right == replace_node:
-            # replace_node.parent.right = child
-            parent_arrow = 'right'
+            child_type = 'left'
 
+            if self.parent is None:
+                self.left_child_arrow.destroy()
+                if self in self.rbtree_animation.displayed_object_set:
+                    self.rbtree_animation.displayed_object_set.remove(self)
+                self.rbtree_demo.remove(self.node)
+                self.root = self.left
+                self.left.parent = None
 
+                return None, self.left, None, child_type
 
-        if node == self.root:
-            node.set_data(-1)
-            del self.data_node_map[node.data]
-            return
+            elif self.parent.right == self:
+                self.left_child_arrow.destroy()
+                if self in self.rbtree_animation.displayed_object_set:
+                    self.rbtree_animation.displayed_object_set.remove(self)
+                self.rbtree_demo.remove(self.node)
+                self.parent.set_right_child(self.left)
+                self.parent.right = self.left
+                self.left.parent = self.parent
 
-        self.rbtree_demo.play(FadeOut(node.circle), FadeOut(parent_arrow.arrow), run_time=RUN_TIME_UNIT)
+                return self.parent, self.left, 'right', child_type
 
-        node.parent.recursive_add_parent_tree_group(remove_items = [node, parent_arrow])
-        self.displayed_object_set.remove(node)
-        self.displayed_object_set.remove(parent_arrow)
-        del self.data_node_map[node.data]
-        del node
-        del parent_arrow
+            elif self.parent.left == self:
+                self.left_child_arrow.destroy()
+                if self in self.rbtree_animation.displayed_object_set:
+                    self.rbtree_animation.displayed_object_set.remove(self)
+                self.rbtree_demo.remove(self.node)
+                self.parent.set_left_child(self.left)
+                self.parent.left = self.left
+                self.left.parent = self.parent
+
+                return self.parent, self.left, 'left', child_type
 

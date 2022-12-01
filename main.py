@@ -16,27 +16,78 @@ class RBTreeDemo(Scene):
 
         # 可使用 rbtree_animation.insert() 或是 rbtree_animation.delete()
         # 來指定要插入什麼資料以及刪除什麼資料
-        rbtree_animation.insert(6)
+
+        ### normal demo
+
+        # rbtree_animation.insert(6)
+        # rbtree_animation.insert(1)
+        # rbtree_animation.insert(5)
+        # rbtree_animation.insert(2)
+        # rbtree_animation.insert(8)
+        # rbtree_animation.insert(9)
+        # rbtree_animation.insert(7)
+        # rbtree_animation.insert(5.5)
+        # rbtree_animation.insert(3)
+        # rbtree_animation.insert(10)
+        # rbtree_animation.insert(8.5)
+        # rbtree_animation.insert(0.5)
+        # rbtree_animation.insert(7.5)
+        # rbtree_animation.insert(0.75)
+        # rbtree_animation.insert(6.5)
+        # rbtree_animation.insert(0.6)
+        # rbtree_animation.insert(0.65)
+        # rbtree_animation.insert(5.3)
+        # rbtree_animation.insert(5.8)
+        # rbtree_animation.insert(0.3)
+        # rbtree_animation.insert(0.8)
+        # rbtree_animation.insert(7.8)
+        # rbtree_animation.insert(4)
+        # self.wait()
+
+        ### delete_test: 1 -> 2 -> -2
+
+        # rbtree_animation.insert(1)
+        # rbtree_animation.insert(2)
+        # rbtree_animation.delete(2)
+        # self.wait()
+
+        ### delete_test: 2 -> 1 -> -1
+
+        # rbtree_animation.insert(2)
+        # rbtree_animation.insert(1)
+        # rbtree_animation.delete(1)
+        # self.wait()
+
+        ### delete_test: 1 -> 2 -> -2 -> -1
+
+        # rbtree_animation.insert(1)
+        # rbtree_animation.insert(2)
+        # rbtree_animation.delete(2)
+        # rbtree_animation.delete(1)
+        # self.wait()
+
+        ### delete_test: 2 -> 1 -> -1 -> -2
+
+        # rbtree_animation.insert(2)
+        # rbtree_animation.insert(1)
+        # rbtree_animation.delete(1)
+        # rbtree_animation.delete(2)
+        # self.wait()
+
+        ### delete_test: 1 -> 2 -> -1
+
         rbtree_animation.insert(1)
-        rbtree_animation.insert(5)
         rbtree_animation.insert(2)
-        rbtree_animation.insert(8)
-        rbtree_animation.insert(9)
-        rbtree_animation.insert(7)
-        rbtree_animation.insert(5.5)
-        rbtree_animation.insert(3)
-        rbtree_animation.insert(10)
-        rbtree_animation.insert(8.5)
-        rbtree_animation.insert(0.5)
-        rbtree_animation.insert(7.5)
-        rbtree_animation.insert(0.75)
-        rbtree_animation.insert(6.5)
-        rbtree_animation.insert(0.6)
-        rbtree_animation.insert(0.65)
-        rbtree_animation.insert(5.3)
-        rbtree_animation.insert(5.8)
-        rbtree_animation.insert(0.3)
-        rbtree_animation.insert(0.8)
-        rbtree_animation.insert(7.8)
-        rbtree_animation.insert(4)
+        rbtree_animation.delete(1)
         self.wait()
+
+        ### delete_test: 2 -> 1 -> -2
+
+        # rbtree_animation.insert(2)
+        # rbtree_animation.insert(1)
+        # rbtree_animation.delete(2)
+        # self.wait()
+
+
+
+

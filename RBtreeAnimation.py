@@ -18,10 +18,10 @@ def traversal(node):
     traversal(node.right)
 
 class DummyCircle:
-    def __init__(self, rbtree_demo, rbtree_animation, *, start_node):
+    def __init__(self, rbtree_demo, rbtree_animation, *, start_node, color="GREEN", radius_bias = 0.0):
         self.rbtree_demo = rbtree_demo
         self.rbtree_animation = rbtree_animation
-        self.circle = Circle(radius=DUMMY_CIRCLE_RADIUS, color="GREEN", fill_opacity=0).move_to(self.rbtree_animation.start_coor)
+        self.circle = Circle(radius=DUMMY_CIRCLE_RADIUS+radius_bias, color=color, fill_opacity=0).move_to(start_node.circle.get_center())
         self.rbtree_demo.play(Create(self.circle), run_time=RUN_TIME_UNIT)
 
     def move(self, coor):
@@ -113,7 +113,7 @@ class RBTreeAnimation:
         target_node = now_node
         replace_node = None
 
-        dummy_circle2 = DummyCircle(self.rbtree_demo, self, start_node = now_node)
+        dummy_circle2 = DummyCircle(self.rbtree_demo, self, start_node = now_node, color="ORANGE", radius_bias=DUMMY_CIRCLE_RADIUS_BIAS)
         if now_node.left is not None:
             now_node = now_node.left
             self.rbtree_demo.play(dummy_circle2.move(now_node.circle.get_center()), run_time=RUN_TIME_UNIT)
@@ -124,31 +124,45 @@ class RBTreeAnimation:
         else:
             replace_node = now_node
 
-        target_node.data, replace_node.data = replace_node.data, target_node.data
-        self.rbtree_demo.play(Transform(replace_node.node_data, target_node.node_data), Transform(target_node.node_data, replace_node.node_data), FadeOut(dummy_circle.circle), FadeOut(dummy_circle2.circle), run_time=RUN_TIME_UNIT)
+        if target_node != replace_node:
+            target_node.data, replace_node.data = replace_node.data, target_node.data
+            self.rbtree_demo.play(Transform(replace_node.node_data, target_node.node_data), Transform(target_node.node_data, replace_node.node_data), FadeOut(dummy_circle.circle), FadeOut(dummy_circle2.circle), run_time=RUN_TIME_UNIT)
+        else:
+            self.rbtree_demo.play(FadeOut(dummy_circle.circle), FadeOut(dummy_circle2.circle), run_time=RUN_TIME_UNIT)
         self.rbtree_demo.remove(dummy_circle.circle)
         self.rbtree_demo.remove(dummy_circle2.circle)
 
         if replace_node.black_num == 0:
             # 1. replace node is red
-            replace_node.destroy()
+            target_node_parent, target_node_child, parent_child_type, self_child_type  = replace_node.destroy()
+
+            ### adjust tree position
             return True
 
         elif replace_node.left or replace_node.right:
             # 2. replace node have child
-            replace_node.destroy()
+            target_node_parent, target_node_child, parent_child_type, self_child_type  = replace_node.destroy()
+
+            if target_node_parent is None:
+                target_node_child.move_to(self.start_coor)
+            else:
+                pass ####
+
+            ### use child to fill replace_node's position
+            ### adjust tree position
             return True
         else:
             # 2.5. replace is only root node
             if replace_node == self.root:
-                replace_node.destroy()
+                now_node.set_data(-1)
                 return True
 
             # 3. BBB
             # 4. BRB
             # 5. BBR
             self._delete_node_handle(replace_node)
-            replace_node.destroy()
+            target_node_parent, target_node_child, parent_child_type, self_child_type  = replace_node.destroy()
+            ### adjust tree position
             return True
 
 
